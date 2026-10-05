@@ -1,0 +1,745 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Запуск сообщества ЮрФундамент</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=PT+Serif:wght@400;700&family=Golos+Text:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: рабочая доска недели (колонки-дни) → карточка поста открывается поверх с текстом, превью и ТЗ на визуал */
+:root{
+  --bg:#EDF0F2; --surface:#FFFFFF; --sunk:#F5F7F8; --ink:#16222B; --muted:#5B6873; --line:#D3DAE0;
+  --accent:#A86C12; --accent-soft:#F6ECDC;
+  --c-email:#2F6FAE; --c-tg:#23807A; --c-chat:#A86C12; --c-web:#6A5BA8; --c-prep:#738290;
+  --s-email:#E6EFF8; --s-tg:#E2F1EF; --s-chat:#F6ECDC; --s-web:#EDEAF6; --s-prep:#EDF0F2;
+  --tg-wall:#DCE6E4; --tg-bubble:#FFFFFF; --tg-ink:#16222B;
+  --mock-bg:#17283A; --mock-ink:#F3EEE4; --mock-acc:#D9A04A; --mock-sub:#A9B6C2;
+  --shadow:0 1px 2px rgba(22,34,43,.06),0 8px 24px rgba(22,34,43,.08);
+  --f-display:"PT Serif",Georgia,"Times New Roman",serif;
+  --f-body:"Golos Text",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#11171C; --surface:#19222A; --sunk:#151D23; --ink:#E5EAEE; --muted:#97A5B0; --line:#2A353E;
+  --accent:#DDA552; --accent-soft:#33291B;
+  --c-email:#6EA6DC; --c-tg:#5FBDB4; --c-chat:#DDA552; --c-web:#A497DE; --c-prep:#93A1AD;
+  --s-email:#1A2A3A; --s-tg:#173130; --s-chat:#33291B; --s-web:#262238; --s-prep:#1C252C;
+  --tg-wall:#0F1E22; --tg-bubble:#1E2C33; --tg-ink:#E5EAEE;
+  --mock-bg:#0E1A26; --mock-ink:#F3EEE4; --mock-acc:#E3AE5C; --mock-sub:#8D9CA9;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11171C; --surface:#19222A; --sunk:#151D23; --ink:#E5EAEE; --muted:#97A5B0; --line:#2A353E;
+  --accent:#DDA552; --accent-soft:#33291B;
+  --c-email:#6EA6DC; --c-tg:#5FBDB4; --c-chat:#DDA552; --c-web:#A497DE; --c-prep:#93A1AD;
+  --s-email:#1A2A3A; --s-tg:#173130; --s-chat:#33291B; --s-web:#262238; --s-prep:#1C252C;
+  --tg-wall:#0F1E22; --tg-bubble:#1E2C33; --tg-ink:#E5EAEE;
+  --mock-bg:#0E1A26; --mock-ink:#F3EEE4; --mock-acc:#E3AE5C; --mock-sub:#8D9CA9;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35); color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;padding:0 16px}
+.wrap{max-width:1280px;margin:0 auto;padding-block:28px 64px;display:flex;flex-direction:column;gap:28px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;font-weight:700}
+h1{font-size:clamp(26px,4vw,38px);line-height:1.15}
+h2{font-size:22px}
+h3{font-size:17px}
+.eyebrow{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.lede{max-width:68ch;color:var(--muted);margin:0}
+header{display:flex;flex-direction:column;gap:10px}
+.principle{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.principle div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.principle b{font-weight:600}
+.principle span{color:var(--muted);font-size:14px}
+
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.tab{font:inherit;font-weight:500;background:none;border:0;padding:10px 14px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tab:focus-visible,.chip:focus-visible,.post:focus-visible,button:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chip{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:5px 12px 5px 9px;cursor:pointer;display:inline-flex;align-items:center;gap:7px}
+.chip i{width:9px;height:9px;border-radius:50%;display:inline-block}
+.chip[aria-pressed="false"]{opacity:.45}
+.toolbar select{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:5px 8px}
+.toolbar .sp{flex:1}
+.reset{font:inherit;font-size:13px;background:none;border:0;color:var(--accent);cursor:pointer;padding:4px}
+
+.board-scroll{overflow-x:auto;padding-bottom:6px}
+.board{display:grid;grid-template-columns:repeat(6,minmax(200px,1fr));gap:12px;min-width:1240px}
+.day{display:flex;flex-direction:column;gap:8px;min-width:0}
+.day-h{display:flex;align-items:baseline;justify-content:space-between;padding:0 2px 6px;border-bottom:1px solid var(--line)}
+.day-h b{font-family:var(--f-display);font-size:18px}
+.day-h span{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.day-h.next b{color:var(--muted)}
+.day-note{font-size:12px;color:var(--muted);font-style:italic;padding:0 2px}
+.post{text-align:left;font:inherit;color:inherit;background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--ch);border-radius:8px;padding:10px 11px;display:flex;flex-direction:column;gap:5px;cursor:pointer;transition:transform .12s ease,box-shadow .12s ease}
+.post:hover{box-shadow:var(--shadow);transform:translateY(-1px)}
+.post.rhythm{background:var(--sunk);border-style:dashed;border-left-style:solid}
+.post .meta{display:flex;justify-content:space-between;gap:6px;font-family:var(--f-mono);font-size:11px;color:var(--ch);text-transform:uppercase;letter-spacing:.04em}
+.post .meta em{font-style:normal;color:var(--muted)}
+.post .t{font-weight:600;font-size:14px;line-height:1.3}
+.post .s{font-size:12.5px;color:var(--muted);line-height:1.4}
+.post .kind{display:inline-flex;gap:5px;align-items:center;font-size:11.5px;color:var(--muted);margin-top:2px}
+.kdot{width:16px;height:16px;border-radius:4px;background:var(--sunk);border:1px solid var(--line);display:inline-grid;place-items:center;font-size:9px}
+.kdot.circle{border-radius:50%}
+
+.legend{font-size:12.5px;color:var(--muted);display:flex;gap:16px;flex-wrap:wrap}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend .box{width:22px;height:14px;border:1px solid var(--line);border-left:3px solid var(--muted);border-radius:3px;background:var(--surface)}
+.legend .box.d{border-style:dashed;border-left-style:solid;background:var(--sunk)}
+
+.rhythm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.rgroup{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.rgroup h3{display:flex;align-items:center;gap:8px}
+.rgroup h3 i{width:10px;height:10px;border-radius:50%}
+.rgroup p{margin:0;font-size:14px;color:var(--muted)}
+.rrow{display:grid;grid-template-columns:110px 1fr;gap:10px;padding-top:10px;border-top:1px solid var(--line);min-width:0}
+.rrow .when{font-family:var(--f-mono);font-size:12px;color:var(--muted);padding-top:2px}
+.rrow b{font-weight:600}
+.rrow div{min-width:0;font-size:14px}
+.rrow .open{font:inherit;font-size:13px;color:var(--accent);background:none;border:0;padding:0;cursor:pointer;margin-top:3px}
+
+.vis-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.vis{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.vis .mockholder{display:flex;justify-content:center;background:var(--sunk);border-radius:8px;padding:16px}
+.vis ul{margin:0;padding-left:18px;font-size:14px;display:flex;flex-direction:column;gap:3px}
+.vis .use{font-size:12.5px;color:var(--muted)}
+
+/* mockups */
+.mock-card{width:100%;max-width:240px;aspect-ratio:4/5;background:var(--mock-bg);color:var(--mock-ink);border-radius:6px;padding:18px 16px;display:flex;flex-direction:column;gap:8px;font-family:var(--f-body);position:relative;overflow:hidden}
+.mock-card .tag{font-family:var(--f-mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--mock-acc)}
+.mock-card .hl{font-family:var(--f-display);font-size:19px;line-height:1.15;font-weight:700}
+.mock-card .big{font-family:var(--f-display);font-size:40px;line-height:1;color:var(--mock-acc);font-weight:700}
+.mock-card .sub{font-size:10.5px;color:var(--mock-sub);line-height:1.35}
+.mock-card .rows{display:flex;flex-direction:column;gap:7px;margin-top:4px}
+.mock-card .rows div{border-top:1px solid rgba(255,255,255,.14);padding-top:6px;font-size:10px;line-height:1.3}
+.mock-card .rows code{font-family:var(--f-mono);color:var(--mock-acc);font-size:9px;display:block}
+.mock-card .foot{margin-top:auto;display:flex;justify-content:space-between;font-family:var(--f-mono);font-size:8.5px;color:var(--mock-sub);letter-spacing:.06em}
+.mock-card .q{font-family:var(--f-display);font-size:58px;line-height:.6;color:var(--mock-acc);height:26px}
+.mock-circle{width:200px;max-width:100%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 50% 38%,#6F7D88 0 18%,transparent 19%),radial-gradient(ellipse at 50% 92%,#55626C 0 34%,transparent 35%),linear-gradient(160deg,#C9D2D8,#8E9BA5);position:relative;display:grid;place-items:center;border:3px solid var(--surface);box-shadow:var(--shadow)}
+.mock-circle span{position:absolute;bottom:14%;left:50%;transform:translateX(-50%);background:rgba(10,20,28,.72);color:#fff;font-size:10px;padding:2px 8px;border-radius:99px;white-space:nowrap;font-family:var(--f-mono)}
+.mock-email{width:100%;max-width:260px;background:#fff;color:#16222B;border-radius:6px;border:1px solid var(--line);overflow:hidden;font-size:10px}
+.mock-email .bar{background:var(--mock-bg);color:var(--mock-ink);padding:8px 10px;font-family:var(--f-mono);font-size:8.5px;letter-spacing:.1em}
+.mock-email .b{padding:12px 12px 14px;display:flex;flex-direction:column;gap:7px}
+.mock-email .h{font-family:var(--f-display);font-size:15px;font-weight:700;line-height:1.2}
+.mock-email .v{aspect-ratio:16/9;background:linear-gradient(160deg,#C9D2D8,#8E9BA5);border-radius:4px;display:grid;place-items:center}
+.mock-email .v i{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.9);display:grid;place-items:center;font-style:normal;font-size:11px;color:#16222B}
+.mock-email .btn{background:#A86C12;color:#fff;text-align:center;padding:7px;border-radius:4px;font-weight:600}
+.mock-email .ln{height:5px;background:#E3E8EC;border-radius:3px}
+.mock-email .ln.s{width:70%}
+
+/* modal */
+.overlay{position:fixed;inset:0;background:rgba(10,16,20,.5);display:flex;justify-content:center;align-items:flex-start;padding:max(24px,env(safe-area-inset-top,0px)) 16px 24px;overflow-y:auto;z-index:10}
+.modal{background:var(--surface);border-radius:14px;max-width:1040px;width:100%;box-shadow:var(--shadow);display:flex;flex-direction:column}
+.m-head{display:flex;justify-content:space-between;gap:12px;padding:20px 22px 14px;border-bottom:1px solid var(--line)}
+.m-head .eyebrow{color:var(--ch)}
+.m-head h2{margin-top:4px}
+.m-head .who{font-size:13px;color:var(--muted);margin-top:6px}
+.close{font:inherit;font-size:22px;line-height:1;background:none;border:0;color:var(--muted);cursor:pointer;padding:4px 8px;align-self:flex-start}
+.m-body{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:0}
+.m-col{padding:18px 22px 24px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.m-col+.m-col{border-left:1px solid var(--line);background:var(--sunk);border-radius:0 0 14px 0}
+.why{background:var(--accent-soft);border-radius:8px;padding:10px 12px;font-size:14px}
+.why b{font-weight:600}
+.subject{font-size:13.5px;display:flex;flex-direction:column;gap:4px;background:var(--sunk);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.subject span{color:var(--muted);font-family:var(--f-mono);font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+.tgwall{background:var(--tg-wall);border-radius:10px;padding:16px}
+.bubble{background:var(--tg-bubble);color:var(--tg-ink);border-radius:12px 12px 12px 4px;padding:11px 13px;white-space:pre-wrap;font-size:14.5px;line-height:1.5;max-width:560px;overflow-wrap:anywhere}
+.bubble.mail{border-radius:8px;font-size:14px}
+.copy{align-self:flex-start;font:inherit;font-size:13px;font-weight:500;background:var(--ink);color:var(--surface);border:0;border-radius:7px;padding:7px 14px;cursor:pointer}
+.spec h3{font-size:15px;margin-bottom:6px;font-family:var(--f-body);font-weight:600}
+.spec ul{margin:0;padding-left:18px;font-size:14px;display:flex;flex-direction:column;gap:4px}
+.script{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}
+.script div{display:grid;grid-template-columns:66px 1fr;gap:10px;padding:8px 10px;font-size:14px;border-top:1px solid var(--line)}
+.script div:first-child{border-top:0}
+.script code{font-family:var(--f-mono);font-size:12px;color:var(--accent);padding-top:2px}
+.mockwrap{display:flex;justify-content:center;padding:6px 0}
+.note{font-size:13px;color:var(--muted)}
+.empty{color:var(--muted);font-size:14px;padding:30px 0;text-align:center}
+
+.kpi{border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:12px 14px;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.kpi .main{font-weight:600}
+.kpi .tgt{font-family:var(--f-mono);font-size:12.5px;color:var(--accent);line-height:1.45}
+.kpi .ex{color:var(--muted);font-size:13px}
+.mx{display:flex;flex-direction:column;gap:20px}
+.mx-block{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.mx-block p{margin:0;max-width:72ch}
+.mx-two{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px}
+.hist{display:flex;flex-direction:column;gap:10px}
+.hrow{display:grid;grid-template-columns:minmax(0,1fr) 190px;gap:12px;align-items:center;font-size:13px}
+.hrow .nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hrow .nm small{display:block;color:var(--muted);font-family:var(--f-mono);font-size:11px}
+.bars{display:flex;flex-direction:column;gap:3px}
+.bar{display:grid;grid-template-columns:1fr 64px;gap:6px;align-items:center;font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+.bar div{height:8px;border-radius:2px;background:var(--sunk);position:relative;overflow:hidden}
+.bar div i{position:absolute;inset:0 auto 0 0;border-radius:2px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+.stat{border-top:2px solid var(--line);padding-top:8px}
+.stat b{font-family:var(--f-display);font-size:28px;display:block;font-variant-numeric:tabular-nums}
+.stat span{font-size:13px;color:var(--muted)}
+.stat.bad{border-top-color:var(--accent)}
+.stat.bad b{color:var(--accent)}
+.funnel{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+.fstep{background:var(--sunk);border:1px solid var(--line);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:4px;font-size:13px;min-width:0}
+.fstep b{font-size:14px}
+.fstep .tgt{font-family:var(--f-mono);font-size:11.5px;color:var(--accent)}
+.fstep.biz{background:var(--accent-soft);border-color:var(--accent)}
+.checklist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;font-size:14px}
+.checklist li{display:grid;grid-template-columns:18px 1fr;gap:8px}
+.checklist li::before{content:"";width:14px;height:14px;border:1.5px solid var(--accent);border-radius:3px;margin-top:3px}
+.mtable{width:100%;border-collapse:collapse;font-size:13.5px;min-width:620px}
+.mtable th{text-align:left;font-family:var(--f-mono);font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:500;padding:6px 8px;border-bottom:1px solid var(--line)}
+.mtable td{padding:8px;border-bottom:1px solid var(--line);vertical-align:top}
+.mtable td.t{font-family:var(--f-mono);font-size:12px;color:var(--accent)}
+.alert{border:1px solid var(--accent);background:var(--accent-soft);border-radius:10px;padding:12px 16px;font-size:14px}
+@media (max-width:960px){.funnel{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:820px){
+  .m-body{grid-template-columns:1fr}
+  .m-col+.m-col{border-left:0;border-top:1px solid var(--line);border-radius:0 0 14px 14px}
+  .rrow{grid-template-columns:1fr;gap:2px}
+}
+@media (prefers-reduced-motion:reduce){.post{transition:none}.post:hover{transform:none}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">ЮрФундамент · сообщество юристов · urreshenie.ru/lawyer-community</div>
+    <h1>Запуск сообщества: неделя 12–16 октября</h1>
+    <p class="lede">Все касания недели по каналам: рассылка, канал ИЮР, закрытый чат и эфир 15.10. Нажми на карточку, чтобы открыть текст, превью поста и ТЗ на визуал или сценарий кружка.</p>
+  </header>
+
+  <section class="principle" aria-label="Принципы">
+    <div><b>Чат даёт пользу, канал её показывает</b><span>Полный обзор и разбор кейсов живут только в закрытом чате. В ИЮР выходит тизер с приглашением.</span></div>
+    <div><b>Ритм ИЮР не трогаем</b><span>Рубрики Пн–Пт идут как обычно. Посты о сообществе встают вторым постом дня.</span></div>
+    <div><b>Тон коллеги, не продавца</b><span>Юристы-ЛПР быстро считывают рекламу. Пишем как партнёр, который делится опытом.</span></div>
+  </section>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab" role="tab" id="tab-week" aria-selected="true" data-view="week">Неделя запуска</button>
+    <button class="tab" role="tab" id="tab-rhythm" aria-selected="false" data-view="rhythm">Постоянный ритм с 19.10</button>
+    <button class="tab" role="tab" id="tab-vis" aria-selected="false" data-view="vis">Визуалы и кружки</button>
+    <button class="tab" role="tab" id="tab-metrics" aria-selected="false" data-view="metrics">Метрики</button>
+  </nav>
+
+  <section id="view-week" class="view" style="display:flex;flex-direction:column;gap:14px">
+    <div class="toolbar">
+      <div id="chips" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+      <span class="sp"></span>
+      <label for="owner" class="eyebrow">Исполнитель</label>
+      <select id="owner"></select>
+      <button class="reset" id="reset">Сбросить</button>
+    </div>
+    <div class="legend">
+      <span><i class="box"></i>Новый пост о сообществе</span>
+      <span><i class="box d"></i>Рубрика ИЮР по ритму, без изменений</span>
+    </div>
+    <div class="board-scroll"><div class="board" id="board"></div></div>
+  </section>
+
+  <section id="view-rhythm" class="view" hidden>
+    <div class="rhythm-grid" id="rhythm"></div>
+  </section>
+
+  <section id="view-metrics" class="view" hidden><div id="metrics" class="mx"></div></section>
+
+  <section id="view-vis" class="view" hidden>
+    <div class="vis-grid" id="vis"></div>
+  </section>
+</div>
+
+<div class="overlay" id="overlay" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="m-title" id="modal"></div>
+</div>
+
+<script>
+const CH = {
+  email:{name:"Рассылка", c:"--c-email"},
+  tg:{name:"Канал ИЮР", c:"--c-tg"},
+  chat:{name:"Закрытый чат", c:"--c-chat"},
+  web:{name:"Вебинар 15.10", c:"--c-web"},
+  prep:{name:"Подготовка", c:"--c-prep"}
+};
+const LINK = "[ссылка на анкету + UTM]";
+
+/* ---------- макеты визуалов ---------- */
+const MOCK = {
+  launch: () => `<div class="mock-circle" aria-label="Кадр видео"><span>▶ 1:20 · Екатерина</span></div>`,
+  welcomeCircle: () => `<div class="mock-circle" aria-label="Кружок"><span>0:45 · Екатерина</span></div>`,
+  caseCircle: () => `<div class="mock-circle" aria-label="Кружок"><span>0:50 · Эдуард</span></div>`,
+  breakfastCircle: () => `<div class="mock-circle" aria-label="Кружок"><span>0:30 · с завтрака</span></div>`,
+  review: () => `<div class="mock-card">
+      <div class="tag">Обзор практики · 19.10</div>
+      <div class="hl">Три решения недели по строительным спорам</div>
+      <div class="rows">
+        <div><code>А05-8567/2024</code>10 требований о недостатках — суд удовлетворил одно</div>
+        <div><code>№ дела</code>[суть в одну строку]</div>
+        <div><code>№ дела</code>[суть в одну строку]</div>
+      </div>
+      <div class="foot"><span>ЮРФУНДАМЕНТ</span><span>ТОЛЬКО ДЛЯ УЧАСТНИКОВ</span></div></div>`,
+  teaser: () => `<div class="mock-card">
+      <div class="tag">Кейс из сообщества</div>
+      <div class="q">“</div>
+      <div class="hl">Акт подписан с оговорками. Платить заказчик не собирается</div>
+      <div class="sub">Коллеги предложили три стратегии. Чем закончилось на практике — в сообществе</div>
+      <div class="foot"><span>ЮРФУНДАМЕНТ</span><span>ДЛЯ ЮРИСТОВ →</span></div></div>`,
+  breakfast: () => `<div class="mock-card">
+      <div class="tag">Юридический завтрак</div>
+      <div class="big">[дата]</div>
+      <div class="hl">[Тема завтрака одной строкой]</div>
+      <div class="sub">[Место] · 9:00–10:30 · до 15 участников</div>
+      <div class="foot"><span>ЮРФУНДАМЕНТ</span><span>ПО ПРИГЛАШЕНИЮ</span></div></div>`,
+  growth: () => `<div class="mock-card">
+      <div class="tag">Сообщество · месяц 1</div>
+      <div class="big">[N]</div>
+      <div class="hl">юристов из [M] компаний уже в сообществе</div>
+      <div class="sub">Адвокаты, внутренние юристы стройкомпаний, судебные юристы</div>
+      <div class="foot"><span>ЮРФУНДАМЕНТ</span><span>ВСТУПИТЬ →</span></div></div>`,
+  email: () => `<div class="mock-email">
+      <div class="bar">ЮРФУНДАМЕНТ · СООБЩЕСТВО</div>
+      <div class="b"><div class="h">Закрытое сообщество юристов в строительных спорах</div>
+      <div class="ln"></div><div class="ln s"></div>
+      <div class="v"><i>▶</i></div>
+      <div class="ln"></div><div class="ln"></div><div class="ln s"></div>
+      <div class="btn">Вступить в сообщество</div></div></div>`,
+  poll: () => `<div class="mock-card">
+      <div class="tag">Опрос · для юристов</div>
+      <div class="hl">С какими строительными спорами к вам приходят чаще?</div>
+      <div class="rows"><div>Неоплата работ</div><div>Недостатки и гарантия</div><div>Сроки и неустойки</div><div>Допработы и цена</div></div>
+      <div class="foot"><span>ЮРФУНДАМЕНТ</span><span>НАТИВНЫЙ ОПРОС TG</span></div></div>`
+};
+
+/* ---------- посты недели ---------- */
+const POSTS = [
+ {id:"p1",day:0,ch:"prep",time:"до 18:00",title:"Проверить анкету изнутри",sum:"Пройти анкету самому: приходит ли письмо и ссылка в чат",owners:["Дмитрий"],kind:"task",
+  why:"Страница обещает приветственное письмо и доступ в закрытый Telegram. Если что-то не приходит, первые вступившие уйдут с ощущением сырого запуска.",
+  checklist:["Заполнить анкету с личной почты и телефона","Заявка пришла на почту Эдуарда со всеми полями анкеты","Приветственное письмо пришло в течение 5 минут, не в спам","В письме рабочая ссылка-приглашение в группу"]},
+ {id:"p2",day:0,ch:"prep",time:"до 18:00",title:"Сегмент «юристы» для Unisender",sum:"Выгрузка из Б24 по роли",owners:["Дарья"],kind:"task",
+  why:"Писать всей базе нельзя: директора стройкомпаний получат письмо не про себя и начнут отписываться.",
+  checklist:["Сегмент по роли: юрист / юрист компании / адвокат"]},
+ {id:"p3",day:0,ch:"prep",time:"до 18:00",title:"Закрепить посты в группе",sum:"Кружок-приветствие и правила — до первых вступивших",owners:["Дарья"],kind:"task",
+  why:"Первый вступивший не должен попасть в пустую группу. Кружок и правила задают тон с первой минуты.",
+  checklist:["Модерация и запрет ссылок для новичков","Опубликовать и закрепить кружок-приветствие (см. Вт, закрытый чат)","Опубликовать и закрепить правила","Добавить 3–4 юристов ИЮР заранее, чтобы чат не был пустым"]},
+ {id:"p4",day:0,ch:"tg",rhythm:true,time:"по ритму",title:"Кружок-анонс вебинара 15.10",sum:"Объём инженерных изысканий. Без изменений",owners:["Инна"],kind:"circle",note:"Рубрика по действующему ритму ИЮР, ведётся по КП вебинара."},
+
+ {id:"p5",kpi:["Заявки по UTM / доставленные","Открываемость, клики, отписки и жалобы","Открытия ≥40%. Клики ≥2% от доставленных — вдвое выше среднего прошлых писем (~1%)"],day:1,ch:"email",time:"10:00",title:"Письмо-запуск",sum:"Сегмент юристов: зачем сообщество, видео, анкета",owners:["Дмитрий","Эдуард"],kind:"email",mock:"email",
+  subject:{a:"Строительный спор — повод собраться коллегами",b:"Каждый понедельник — обзор практики по стройке (для переотправки)",pre:"Закрытый чат юристов. Бесплатно, клиент остаётся вашим"},
+  why:"Отправляем во вторник утром: у B2B-писем лучшая открываемость в начале недели, а понедельник занят анонсом вебинара.",
+  text:`Здравствуйте, [Имя]!
+
+Нам регулярно звонят коллеги с похожими вопросами. Заказчик не принимает работы из-за исполнительной документации — как заходить? Заказывать экспертизу до иска или после? Как суды сейчас смотрят на односторонний акт?
+
+Каждый такой звонок — это чья-то сложная ситуация в деле, где нет времени разбираться с нуля. Поэтому мы решили собрать коллег в одном месте.
+
+Мы запускаем закрытое сообщество юристов, которые работают со строительным бизнесом.
+
+[Вступить в сообщество] → ${LINK}
+
+Что будет внутри:
+• каждый понедельник — обзор свежей судебной практики по стройке
+• каждую среду — реальный кейс, который разбираем вместе
+• юридические завтраки и закрытые вебинары
+• строительная экспертиза ЮрФундамента, если она нужна в вашем деле
+
+Клиент остаётся вашим. Мы подключаемся экспертизой и не забираем дело.
+
+Участие бесплатное, анкета — на пару минут:
+[Вступить в сообщество] → ${LINK}
+
+Екатерина, адвокат и партнёр ЮрФундамента, за минуту рассказала, как всё устроено:
+[превью видео со ссылкой]
+
+Эдуард
+ЮрФундамент`,
+  spec:["Одна колонка, ширина 600px, без баннера-шапки — письмо от человека, а не рассылка магазина","Тёмная полоса-подпись «ЮрФундамент · сообщество» вместо логотипа-баннера","Превью видео: стоп-кадр Екатерины в кадре + кнопка ▶, ведёт на видео на странице /lawyer-community#video","Кнопка дважды: сразу после первого абзаца и в конце. В прошлых письмах ИЮР открываемость 51–60%, а клики почти нулевые — CTA должен быть виден до прокрутки","Отправитель: Эдуард, не «ЮрФундамент рассылка»"]},
+ {id:"p6",day:1,ch:"tg",rhythm:true,time:"утро",title:"Совет или кейс по ритму",sum:"Рубрика вторника без изменений",owners:["Инна"],kind:"card",note:"Рубрика по действующему ритму ИЮР."},
+ {id:"p7",kpi:["Переходы по UTM / просмотры поста","Просмотры к среднему охвату канала (150), реакции, пересылки","≥150 просмотров за 48 ч — на уровне среднего поста. Переходы ≥2% — 3+"],day:1,ch:"tg",time:"16:00",title:"Пост-запуск сообщества",sum:"Видеообращение Екатерины, закреп на 2 дня",owners:["Инна","Дмитрий"],kind:"video",mock:"launch",
+  why:"Второй пост дня, после рубрики. 16:00 — между обедом и концом рабочего дня, когда юристы листают ленту. Закреп на 2 дня, затем возвращаем закреп вебинара.",
+  text:`**Юристам, к которым приходят со стройкой**
+
+Клиент приносит спор по подряду. Акт подписан с оговорками, исполнительная документация «с замечаниями», денег нет третий месяц.
+
+Вы сильный юрист. Но в строительных спорах решают детали: как оформлены КС-2, что сказал эксперт, какой была переписка с заказчиком. Одна неточность — и позиция сыплется.
+
+Коллеги годами задают нам такие вопросы: в личке, после вебинаров, на конференциях. Поэтому мы открываем закрытое сообщество юристов, адвокатов и специалистов, которые работают со строительным бизнесом.
+
+Что внутри:
+— по понедельникам обзор свежей судебной практики по стройке
+— по средам кейс, который разбираем вместе с коллегами
+— юридические завтраки и закрытые вебинары
+— строительная экспертиза ЮрФундамента, когда она нужна в вашем деле
+
+Клиент остаётся вашим. Мы усиливаем позицию, а не забираем дело.
+
+Участие бесплатное. В видео Екатерина, адвокат и партнёр ЮрФундамента, рассказывает, как всё устроено 👀
+
+👉 Вступить: ${LINK}`,
+  spec:["Видеообращение со страницы /lawyer-community, обрезать до 60–80 секунд для Telegram","Обложка видео: стоп-кадр Екатерины + плашка «Сообщество юристов ЮрФундамент»","Заголовок жирным первой строкой — он же подпись на обложке видео (правило: заголовок дублируется только на карточке и в тексте)","Кросспост VK и MAX тем же текстом и тем же файлом"]},
+ {id:"p8",day:1,ch:"chat",time:"с открытия",title:"Кружок-приветствие Екатерины",sum:"Закреп №1: кто мы, как живёт чат, с чего начать",owners:["Екатерина","Инна"],kind:"circle",mock:"welcomeCircle",
+  why:"Живое лицо в первом закрепе даёт доверие сильнее любого текста. Кружок публикуется до первых вступивших, текст идёт подписью под ним.",
+  script:[["0–5 с","Коллеги, добро пожаловать. Я Екатерина, адвокат ЮрФундамента."],["5–18 с","Мы собрали этот чат, потому что строительные споры почти всегда упираются в узкую экспертизу. Искать её по знакомым долго, а времени в деле обычно нет."],["18–35 с","Три раза в неделю мы приносим дела на обсуждение: в понедельник — свежую практику, в среду — кейс от Эдуарда, в пятницу — ваши дела. Ждём ваш взгляд, ради этого и собрались."],["35–45 с","Начните со знакомства: запишите кружок, как я сейчас, — кто вы и с чем можете помочь коллегам. Здесь все свои."]],
+  text:`Коллеги, добро пожаловать в сообщество ЮрФундамент 👆
+
+Как живёт чат:
+📌 Пн — обзор практики: три свежих дела и вопрос к вам
+📌 Ср — кейс недели: как бы вы зашли?
+📌 Пт — ваши дела на обсуждение
+
+Здесь не читают молча. Начните со знакомства: запишите кружок на 30 секунд — кто вы и с чем можете помочь коллегам. Правила — во втором закрепе.`,
+  spec:["Снимает Екатерина на фронтальную камеру, держать телефон на уровне глаз","Дневной свет из окна, нейтральный фон: стена или книжная полка, без логотипа","Без суфлёра: тезисы выучить, говорить своими словами","Один дубль до 45 секунд, без монтажа и музыки"]},
+ {id:"p9",day:1,ch:"chat",time:"с открытия",title:"Правила чата",sum:"Закреп №2: этика, конфиденциальность, клиент остаётся у вас",owners:["Инна"],kind:"text",
+  why:"Первые два правила провоцируют диалог: знакомство кружком и ответы на дела Пн/Ср/Пт. Остальные снимают главный страх юриста — что клиента уведут.",
+  text:`**Правила сообщества**
+
+1. Представьтесь кружком. 30 секунд: кто вы, где работаете, с чем можете помочь коллегам. Так участники узнают друг друга в лицо, а не по никам.
+2. Спорим и делимся. По понедельникам, средам и пятницам мы приносим дела на обсуждение — отвечайте, даже если ваше мнение расходится с нашим.
+3. Обсуждаем позиции и практику, а не коллег и клиентов.
+4. Кейсы — без имён, названий компаний и деталей, по которым можно узнать клиента.
+5. Клиент остаётся у того, кто его привёл. Здесь никто никого не уводит.
+6. Без рекламы услуг. Ссылки на сторонние ресурсы — после согласования с модератором.
+7. Нужна строительная экспертиза в вашем деле — напишите [контакт] или оставьте вопрос под пятничным постом.
+
+Модератор — [Имя]. За нарушение правил удаляем из чата без предупреждения.`},
+
+ {id:"p10",kpi:["Вступили / отправлено","Ответы на письмо","≥30%"],day:2,ch:"email",time:"10:00–12:00",title:"Личные письма партнёрам",sum:"10–20 знакомым юристам от Эдуарда или Екатерины через Б24",owners:["Эдуард","Екатерина"],kind:"email",
+  subject:{a:"[Имя], нужен ваш опыт",pre:"Обычное письмо, без вёрстки и кнопок"},
+  why:"Первые участники задают уровень чата. Лично приглашённые коллеги приходят с опытом и пишут сами, а не молча читают.",
+  text:`[Имя], добрый день!
+
+Мы открываем закрытый чат для юристов, которые работают со стройкой: разбираем практику, обсуждаем кейсы, раз в месяц встречаемся на юридических завтраках.
+
+Хочется, чтобы с первых дней там были люди с реальным опытом, а не просто подписчики. Поэтому пишу лично: будет здорово, если присоединитесь. Ваш взгляд на [его/её направление — например, корпоративные споры] там точно пригодится.
+
+Анкета на пару минут: ${LINK}
+
+Если удобнее — наберите, расскажу подробнее.
+
+[Подпись Эдуарда или Екатерины, телефон]`,
+  spec:["Отправлять из Б24 от личного ящика, не из Unisender","Строку про направление права адресата дописать вручную под каждого","Без картинок, баннеров и кнопок"]},
+ {id:"p11",kpi:["Голоса / просмотры","Доля ответа «Я не юрист» = сколько в канале не-юристов. Впервые узнаем размер юр-аудитории ИЮР","≥8 голосов"],day:2,ch:"tg",time:"по ритму",title:"Опрос с юридическим уклоном",sum:"Слот опроса по ритму, вопрос адресован юристам",owners:["Инна"],kind:"poll",
+  why:"Опрос остаётся в своём слоте, меняется только вопрос. Юристы в подписчиках узнают себя, а предприниматели тоже могут ответить: варианты про их споры.",
+  text:`Вопрос к юристам среди подписчиков 👀
+
+С какими строительными спорами к вам чаще всего приходят клиенты?
+
+[нативный опрос]
+• Неоплата выполненных работ
+• Недостатки и гарантийные требования
+• Срыв сроков и неустойки
+• Допработы и изменение цены
+• Я не юрист, просто читаю
+
+Такие вопросы мы подробно разбираем с коллегами в сообществе юристов: ${LINK}`,
+  spec:["Нативный опрос Telegram, ответы видны всем","Через 2 дня результаты опроса — материал для кейса недели в чате"]},
+ {id:"p12",kpi:["Представились / вступили","Сколько разных людей написали","≥30% вступивших за первую неделю"],day:2,ch:"chat",time:"12:00",title:"Знакомство кружками",sum:"Представиться кружком на 30 секунд. Первые — юристы ИЮР",owners:["Инна"],kind:"circle",
+  why:"Кружок даёт лицо и голос — участники запоминают друг друга и охотнее пишут. Пустой тред никто не начинает, поэтому первые 2–3 кружка записывают юристы ИЮР.",
+  text:`Давайте знакомиться 🤝
+
+Запишите кружок на 30 секунд:
+— как вас зовут и откуда вы
+— где работаете: в компании, в консалтинге или в частной практике
+— с какими делами чаще всего работаете
+— с чем можете помочь коллегам
+
+Не готовы к видео — напишите текстом, тоже ждём.
+
+Начинаю я 👇`,
+  script:[["0–5 с","Имя и город"],["5–15 с","Где работаю и с какими делами"],["15–25 с","С чем могу помочь коллегам"],["25–30 с","Один вопрос, который сейчас волнует в практике"]],
+  spec:["Первый кружок — Екатерина, второй и третий — юристы ИЮР, в течение часа после поста","Пост без картинки, кружки — ответами в комментариях","На каждый кружок новичка отвечаем текстом: приветствие + вопрос по его практике"]},
+
+ {id:"p13",day:3,ch:"tg",rhythm:true,time:"по ритму",title:"Напоминание + чек-лист",sum:"День вебинара. Писем о сообществе нет",owners:["Инна"],kind:"card",note:"Рубрика по ритму. В день вебинара базу письмами о сообществе не нагружаем."},
+ {id:"p14",day:3,ch:"web",time:"финал эфира",title:"Устный CTA спикера",sum:"15 секунд о сообществе для юристов среди участников",owners:["Спикер"],kind:"text",
+  why:"На вебинарах ИЮР бывают внутренние юристы стройкомпаний. Это самая тёплая аудитория: они только что видели экспертизу в деле.",
+  text:`Говорит спикер в конце, перед ответами на вопросы:
+
+«Коллеги, если среди вас есть юристы. Мы открыли закрытое сообщество для тех, кто ведёт строительные споры: каждый понедельник обзор практики, кейсы, юридические завтраки. Бесплатно. Ссылку сейчас кинем в чат эфира».
+
+Модератор сразу отправляет в чат эфира:
+Сообщество юристов ЮрФундамент → ${LINK}`,
+  spec:["Без слайда — только устно, как в CTA-архитектуре вебинара","Отдельная UTM: utm_source=mtslink, utm_content=chat_15102026"]},
+
+ {id:"p15",day:4,ch:"email",time:"10:00",title:"Переотправка не открывшим",sum:"То же письмо с новой темой",owners:["Дмитрий"],kind:"email",
+  subject:{a:"Каждый понедельник — обзор практики по стройке",pre:"Закрытый чат юристов. Первый обзор выйдет 12 октября"},
+  why:"Через 3 дня после запуска. Новая тема говорит о конкретной пользе, а не о самом факте запуска.",
+  text:`Текст письма-запуска без изменений.
+
+Добавить первой строкой после обращения:
+«Первый обзор практики выйдет в понедельник, 19 октября. Если вступите до выходных — получите его сразу.»`},
+ {id:"p16",kpi:["Клики по P.S.","Заявки с utm_content=followup_ps","Любая заявка — бонус. Ориентир по кликам в письмах ИЮР: 0–5%"],day:4,ch:"email",time:"по графику",title:"P.S. в follow-up после вебинара",sum:"Строка о сообществе в письме с записью",owners:["Дмитрий"],kind:"email",
+  why:"Письмо с записью открывают лучше всех писем недели. P.S. ничего не стоит и не мешает основному CTA.",
+  text:`P.S. Если вы юрист и ведёте строительные споры — у нас есть закрытое сообщество коллег: обзоры практики, кейсы, юридические завтраки. Бесплатно: ${LINK}`},
+ {id:"p17",day:4,ch:"tg",rhythm:true,time:"по ритму",title:"Запись вебинара",sum:"Рубрика пятницы без изменений",owners:["Инна"],kind:"video",note:"Рубрика по действующему ритму ИЮР."},
+ {id:"p18",kpi:["Вопросы от участников","Сколько из них — запрос строительной экспертизы","≥1 вопрос в первую пятницу. Каждый запрос экспертизы — лид в Б24"],day:4,ch:"chat",time:"12:00",title:"Пятничный тред",sum:"Вопросы коллегам + ближайшие события",owners:["Инна"],kind:"text",
+  why:"Пятница — единственный день, когда говорят участники, а не ИЮР. Тред приучает приносить свои дела в чат.",
+  text:`Пятничный тред 📬
+
+Ваша очередь приносить дела. Есть ситуация, где нужен второй взгляд? Опишите её в комментариях — без имён и названий. Ответим сами и позовём коллег с нужной специализацией.
+
+Что впереди:
+• Пн, 19.10 — первый обзор практики
+• Чт, 22.10 — вебинар «Проект прошёл экспертизу, но ошибки обнаружили на стройке» ${LINK}
+• [дата] — юридический завтрак, подробности скоро`,
+  spec:["Без картинки","Ответить на каждый вопрос в течение рабочего дня — первые недели это делает команда ИЮР"]},
+
+ {id:"p19",kpi:["Ответы в теме за 48 ч","Реакции, пересылки","≥2 разных участника написали"],day:5,ch:"chat",time:"10:00",title:"Обзор практики №1",sum:"Старт постоянного ритма: 3 решения недели",owners:["Екатерина","Инна"],kind:"card",mock:"review",
+  why:"Обзор — главная причина оставаться в чате. Он должен читаться за 2 минуты и давать вывод, который можно унести в своё дело.",
+  text:`**Обзор практики · 19 октября**
+
+1. Заказчик заявил 10 недостатков. Суд признал один
+Дело № А05-8567/2024. Школа № 105 в Котласе против подрядчика ООО «ОРТОСТ-ФАСАД». Из десяти пунктов суд обязал устранить только протечки кровли в спортзале. Остальные девять отклонил.
+Что взять в работу: [вывод — формулирует Екатерина]
+
+2. [Заголовок-суть дела одной строкой]
+Дело № [номер]. [Две строки: стороны, спор, решение.]
+Что взять в работу: [вывод]
+
+3. [Заголовок-суть дела одной строкой]
+Дело № [номер]. [Две строки.]
+Что взять в работу: [вывод]
+
+Какое из решений встречалось в вашей практике? Пишите в комментариях 🔥`,
+  spec:["Карточка 1080×1350, фирменный тёмный фон","Заголовок карточки = первая строка поста","Номера дел моноширинным шрифтом в акцентном цвете — так их легко найти и скопировать","Плашка «Только для участников» — карточку не публикуем в канале ИЮР","Каждое дело и номер сверить с решением суда до публикации"]}
+];
+
+/* ---------- постоянный ритм ---------- */
+const RHYTHM = [
+ {ch:"chat",title:"Закрытый чат",desc:"Три поста ИЮР в неделю, остальное время группа принадлежит участникам. Дедлайн: материалы к обзору — до четверга, 4 кружка «Кейс недели» записываются в первую неделю месяца.",rows:[
+   ["Пн, 10:00","Обзор практики","3 решения недели: суть, номер дела, что взять в работу. Карточка + текст.","review"],
+   ["Ср, 12:00","Кейс недели — кружком","Эдуард рассказывает ситуацию за 50 секунд и спрашивает «как бы вы зашли?». Через сутки — как решилось на практике.","case"],
+   ["Пт, 12:00","Пятничный тред","Вопросы участников и анонсы событий. Отвечаем в тот же день.",null],
+   ["Раз в месяц","Юридический завтрак","Приглашение за 10 дней, напоминание за 2 дня, кружок с завтрака, итоги для тех, кто не пришёл.","breakfast"],
+   ["Раз в месяц","Совместная публикация","Предлагаем участнику соавторство разбора. Лучший способ сделать участника активным.",null]]},
+ {ch:"tg",title:"Канал ИЮР",desc:"Поверх действующего ритма. Здесь сообщество — витрина, а не содержание.",rows:[
+   ["Раз в 2 недели","Кейс из сообщества","Тизер кейса недели без решения. Решение и ответы коллег — по ссылке на вступление.","teaser"],
+   ["Под каждый завтрак","3 юнита","Анонс до, кружок во время, итоги после.","breakfast"],
+   ["Раз в месяц","Рост сообщества","«Нас уже N юристов из M компаний». Публикуем, когда цифра выглядит убедительно.","growth"]]},
+ {ch:"email",title:"Рассылка",desc:"Только сегмент юристов, не вся база.",rows:[
+   ["Раз в месяц","Дайджест сообщества","Лучший кейс месяца + приглашение на ближайший завтрак. Новичкам — повод вступить.",null],
+   ["После анкеты","Приветственное письмо","Ссылка в чат, ритм, кнопка на кружок Екатерины. Проверить, что уходит автоматически.",null]]}
+];
+
+const CASE_SAMPLE = {id:"case",kpi:["Разных участников, предложивших вариант","Ответы на «как решилось», пересылки","≥3 к концу первого месяца"],ch:"chat",title:"Кейс недели — кружок Эдуарда",sum:"Шаблон среды",owners:["Эдуард","Инна"],kind:"circle",mock:"caseCircle",dayLabel:"Каждая среда, 12:00",
+  why:"Кейс голосом руководителя вовлекает сильнее текста: видно живую практику, и хочется ответить. Текст под кружком дублирует суть для тех, кто без звука.",
+  script:[["0–8 с","Коллеги, кейс недели. Ситуация из практики, имена убрал."],["8–30 с","Подрядчик сдал работы. Заказчик подписал акт, но с оговорками: замечания к исполнительной документации. Срок оплаты прошёл два месяца назад, денег нет."],["30–45 с","Вопрос к вам: с чего бы вы начали — претензия, экспертиза или сразу иск? И на что сослались бы?"],["45–50 с","Пишите в комментариях. Завтра расскажу, чем закончилось."]],
+  text:`**Кейс недели** 🧩
+
+Подрядчик сдал работы. Заказчик подписал акт, но с оговорками: замечания к исполнительной документации. Срок оплаты прошёл два месяца назад.
+
+Как бы вы зашли: претензия, экспертиза или сразу иск? На что сослались бы?
+
+Пишите в комментариях. Завтра в это же время Эдуард расскажет, как дело решилось на практике.`,
+  spec:["Эдуард записывает 4 кружка за один раз, в начале месяца — на все среды","Сюжет берём из практики ИЮР или из вопросов пятничного треда","Ответ «как решилось» — текстом в комментариях на следующий день, не отдельным постом","Лучший кейс раз в 2 недели превращается в тизер для канала ИЮР"]};
+
+const TEASER_SAMPLE = {id:"teaser",kpi:["Заявки с utm_content=teaser","Переходы / просмотры","Переходы ≥2% от просмотров (3+ при охвате 150)"],ch:"tg",title:"Кейс из сообщества",sum:"Тизер в канале ИЮР раз в 2 недели",owners:["Инна"],kind:"card",mock:"teaser",dayLabel:"Раз в 2 недели",
+  why:"Показывает изнутри, что в сообществе разбирают настоящие дела. Решение не раскрываем: за ним приходят в чат.",
+  text:`**Акт подписан с оговорками. Платить заказчик не собирается**
+
+На этой неделе юристы сообщества разбирали ситуацию: подрядчик сдал работы, заказчик подписал акт с замечаниями к исполнительной документации и два месяца не платит.
+
+Коллеги предложили три стратегии: от претензии до экспертизы до иска. Эдуард рассказал, чем дело закончилось на практике.
+
+Разбор и ответы коллег — в сообществе для юристов: ${LINK}`,
+  spec:["Карточка 1080×1350, фирменный шаблон, плашка «Кейс из сообщества»","Заголовок карточки = первая строка поста","Без решения и без цифр результата — они остаются в чате","Кросспост VK и MAX"]};
+
+const BREAKFAST_SAMPLE = {id:"breakfast",kpi:["Пришли / записались","Вступили в группу после завтрака, передали дело","Явка ≥50%"],ch:"chat",title:"Юридический завтрак",sum:"Анонс + 3 юнита",owners:["Эдуард","Инна"],kind:"card",mock:"breakfast",dayLabel:"Раз в месяц",
+  why:"По исследованию аудитории, офлайн-завтрак — главная точка доверия для юристов-ЛПР. Контент вокруг него работает и на чат, и на канал.",
+  script:[["0–10 с","Кружок во время завтрака: общий план стола, слышно разговор"],["10–25 с","Эдуард или гость одной фразой: о чём сейчас спорим"],["25–30 с","«Следующий завтрак — [дата]. Приглашение в чате сообщества»"]],
+  text:`**Юридический завтрак · [дата]**
+
+[Тема одной строкой — например, «Экспертиза в строительном споре: когда заказывать и как не проиграть из-за неё»]
+
+Небольшой стол, до 15 человек. Без презентаций: обсуждаем практику и вопросы участников.
+
+[Место] · 9:00–10:30
+Записаться: [ссылка или ответ в комментариях]`,
+  spec:["Анонс в чате за 10 дней, напоминание за 2 дня","В канале ИЮР: анонс до, кружок во время, итоги после — 3 юнита с одного события","Фото со стола без лиц тех, кто не дал согласие"]};
+
+const GROWTH_SAMPLE = {id:"growth",kpi:["Заявки за 48 ч после поста","Переходы / просмотры","Не публикуем, пока участников меньше 20"],ch:"tg",title:"Рост сообщества",sum:"Раз в месяц",owners:["Инна","Дарья"],kind:"card",mock:"growth",dayLabel:"Раз в месяц",
+  why:"Социальное доказательство для тех, кто сомневается. Пока цифра маленькая, этот пост не выходит.",
+  text:`**[N] юристов из [M] компаний уже в сообществе**
+
+За первый месяц: [N] обзоров практики, [N] разобранных кейсов, первый юридический завтрак.
+
+Кто внутри: адвокаты, внутренние юристы строительных компаний, судебные юристы и налоговые консультанты.
+
+Присоединиться: ${LINK}`,
+  spec:["Цифры — из анкет в Б24 (Дарья)","Крупная цифра в акцентном цвете на карточке","Не публиковать, если участников меньше 30"]};
+
+const SAMPLES = {case:CASE_SAMPLE,teaser:TEASER_SAMPLE,breakfast:BREAKFAST_SAMPLE,growth:GROWTH_SAMPLE,review:null};
+
+const VISUALS = [
+ {mock:"review",name:"Карточка «Обзор практики»",use:"Закрытый чат · Пн",items:["1080×1350, тёмный фирменный фон","3 строки-дела: номер моноширинным, суть одной строкой","Плашка «Только для участников»"],open:"p19"},
+ {mock:"teaser",name:"Карточка «Кейс из сообщества»",use:"Канал ИЮР · раз в 2 недели",items:["Кавычка-маркер, заголовок = первая строка поста","Без решения и итоговых цифр","Стрелка «Для юристов →» в подвале"],open:"teaser"},
+ {mock:"caseCircle",name:"Кружок «Кейс недели»",use:"Закрытый чат · Ср · Эдуард",items:["До 50 секунд, один дубль","Ситуация → вопрос «как бы вы зашли?»","4 кружка записываются за раз на месяц"],open:"case"},
+ {mock:"welcomeCircle",name:"Кружок-приветствие",use:"Закрытый чат · закреп · Екатерина",items:["До 45 секунд, дневной свет","Кто мы → как живёт чат → с чего начать","Записывается один раз до запуска"],open:"p8"},
+ {mock:"launch",name:"Видеообращение",use:"Канал ИЮР · пост-запуск",items:["Видео со страницы, обрезка до 60–80 секунд","Обложка: стоп-кадр + плашка «Сообщество юристов»","Кросспост VK и MAX"],open:"p7"},
+ {mock:"email",name:"Письмо-запуск",use:"Рассылка · сегмент юристов",items:["Одна колонка 600px, без баннера","Превью видео с кнопкой ▶","Отправитель — Эдуард"],open:"p5"},
+ {mock:"breakfast",name:"Анонс юрзавтрака",use:"Чат + канал ИЮР · раз в месяц",items:["Крупная дата в акценте","Тема одной строкой, место и время","Плашка «По приглашению»"],open:"breakfast"},
+ {mock:"growth",name:"Карточка роста",use:"Канал ИЮР · раз в месяц",items:["Крупная цифра участников","Кто внутри — одной строкой","Не раньше 30 участников"],open:"growth"}
+];
+
+const DAYS = [["Пн","12.10"],["Вт","13.10"],["Ср","14.10"],["Чт","15.10","Вебинар"],["Пт","16.10"],["Пн","19.10","Старт ритма"]];
+const KIND = {poll:["☰","Опрос"],text:["Т","Текст"],card:["▭","Карточка"],circle:["●","Кружок"],video:["▶","Видео"],email:["✉","Письмо"],task:["✓","Задача"]};
+
+/* ---------- state ---------- */
+const state = {ch:new Set(Object.keys(CH)), owner:""};
+function load(){try{const s=JSON.parse(localStorage.getItem("iur-community-filters")||"null");if(s){state.ch=new Set(s.ch);state.owner=s.owner||"";}}catch(e){}}
+function save(){try{localStorage.setItem("iur-community-filters",JSON.stringify({ch:[...state.ch],owner:state.owner}));}catch(e){}}
+
+const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt = s => esc(s).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>");
+const col = ch => `var(${CH[ch].c})`;
+
+/* ---------- render board ---------- */
+function renderChips(){
+  const box=document.getElementById("chips");box.innerHTML="";
+  Object.entries(CH).forEach(([k,v])=>{
+    const b=document.createElement("button");b.className="chip";b.id="chip-"+k;
+    b.setAttribute("aria-pressed",state.ch.has(k));
+    b.innerHTML=`<i style="background:${col(k)}"></i>${v.name}`;
+    b.onclick=()=>{state.ch.has(k)?state.ch.delete(k):state.ch.add(k);save();renderChips();renderBoard();};
+    box.appendChild(b);
+  });
+  const sel=document.getElementById("owner");
+  const owners=[...new Set(POSTS.flatMap(p=>p.owners))].sort();
+  sel.innerHTML=`<option value="">Все</option>`+owners.map(o=>`<option ${o===state.owner?"selected":""}>${o}</option>`).join("");
+}
+function renderBoard(){
+  const board=document.getElementById("board");board.innerHTML="";
+  DAYS.forEach((d,i)=>{
+    const col_=document.createElement("div");col_.className="day";
+    col_.innerHTML=`<div class="day-h ${i===5?"next":""}"><b>${d[0]}</b><span>${d[1]}${d[2]?" · "+d[2]:""}</span></div>`;
+    const list=POSTS.filter(p=>p.day===i&&state.ch.has(p.ch)&&(!state.owner||p.owners.includes(state.owner)));
+    if(!list.length){const e=document.createElement("div");e.className="day-note";e.textContent="Нет постов по фильтру";col_.appendChild(e);}
+    list.forEach(p=>col_.appendChild(postCard(p)));
+    board.appendChild(col_);
+  });
+}
+function postCard(p){
+  const b=document.createElement("button");b.className="post"+(p.rhythm?" rhythm":"");
+  b.style.setProperty("--ch",col(p.ch));
+  const k=KIND[p.kind];
+  b.innerHTML=`<div class="meta"><span>${CH[p.ch].name}</span><em>${esc(p.time)}</em></div>
+    <div class="t">${esc(p.title)}</div><div class="s">${esc(p.sum)}</div>
+    <div class="kind"><span class="kdot ${p.kind==="circle"?"circle":""}">${k[0]}</span>${k[1]} · ${p.owners.join(", ")}</div>`;
+  b.onclick=()=>openModal(p,b);
+  return b;
+}
+
+/* ---------- modal ---------- */
+let lastFocus=null;
+function openModal(p,from){
+  lastFocus=from||null;
+  const m=document.getElementById("modal");
+  m.style.setProperty("--ch",col(p.ch));
+  const dayLabel=p.dayLabel||(DAYS[p.day]?`${DAYS[p.day][0]} ${DAYS[p.day][1]} · ${p.time}`:"");
+  let left="";
+  if(p.why) left+=`<div class="why"><b>Зачем и почему тогда.</b> ${esc(p.why)}</div>`;
+  if(p.note) left+=`<div class="why">${esc(p.note)}</div>`;
+  if(p.subject){left+=`<div class="subject"><span>Тема письма</span>${esc(p.subject.a)}${p.subject.b?`<span>Тема Б</span>${esc(p.subject.b)}`:""}${p.subject.pre?`<span>Прехедер</span>${esc(p.subject.pre)}`:""}</div>`;}
+  if(p.text){
+    const mail=p.ch==="email";
+    left+=`<div class="tgwall"><div class="bubble ${mail?"mail":""}">${fmt(p.text)}</div></div>
+      <button class="copy" id="copy-btn">Скопировать текст</button>`;
+  }
+  if(p.checklist) left+=`<div class="spec"><h3>Чек-лист</h3><ul>${p.checklist.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`;
+  let right="";
+  if(p.kpi) right+=`<div class="kpi"><div class="eyebrow">Метрика</div><div class="main">${esc(p.kpi[0])}</div><div class="ex">${esc(p.kpi[1])}</div><div class="tgt">Цель: ${esc(p.kpi[2])}</div></div>`;
+  if(p.mock&&MOCK[p.mock]) right+=`<div><div class="eyebrow" style="margin-bottom:8px">Как выглядит</div><div class="mockwrap">${MOCK[p.mock]()}</div><p class="note" style="margin:8px 0 0">Схема раскладки. Финальный вид — в фирменном шаблоне ИЮР.</p></div>`;
+  if(p.script) right+=`<div><div class="eyebrow" style="margin-bottom:8px">Сценарий кружка</div><div class="script">${p.script.map(s=>`<div><code>${esc(s[0])}</code><span>${esc(s[1])}</span></div>`).join("")}</div></div>`;
+  if(p.spec) right+=`<div class="spec"><h3>ТЗ на визуал и публикацию</h3><ul>${p.spec.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`;
+  if(!p.mock&&!p.script&&p.kind!=="task") right+=`<p class="note">Отдельный визуал не нужен${p.kind==="poll"?": это нативный опрос Telegram":""}.</p>`;
+  if(!right) right=`<p class="note">Отдельный визуал не нужен.</p>`;
+  m.innerHTML=`<div class="m-head"><div><div class="eyebrow">${CH[p.ch].name} · ${esc(dayLabel)}</div>
+    <h2 id="m-title">${esc(p.title)}</h2><div class="who">Готовит: ${p.owners.join(", ")}</div></div>
+    <button class="close" id="close-btn" aria-label="Закрыть">×</button></div>
+    <div class="m-body"><div class="m-col">${left}</div><div class="m-col">${right}</div></div>`;
+  const ov=document.getElementById("overlay");ov.hidden=false;document.body.style.overflow="hidden";
+  document.getElementById("close-btn").onclick=closeModal;document.getElementById("close-btn").focus();
+  const cb=document.getElementById("copy-btn");
+  if(cb) cb.onclick=()=>{
+    const plain=p.text.replace(/\*\*(.+?)\*\*/g,"$1");
+    const done=()=>{cb.textContent="Скопировано";setTimeout(()=>cb.textContent="Скопировать текст",1600);};
+    try{navigator.clipboard.writeText(plain).then(done).catch(()=>selectBubble(cb));}catch(e){selectBubble(cb);}
+  };
+}
+function selectBubble(cb){const el=document.querySelector(".bubble");const r=document.createRange();r.selectNodeContents(el);const s=getSelection();s.removeAllRanges();s.addRange(r);cb.textContent="Текст выделен — нажми Ctrl+C";}
+function closeModal(){document.getElementById("overlay").hidden=true;document.body.style.overflow="";if(lastFocus)lastFocus.focus();}
+document.getElementById("overlay").addEventListener("click",e=>{if(e.target.id==="overlay")closeModal();});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!document.getElementById("overlay").hidden)closeModal();});
+
+/* ---------- rhythm & visuals ---------- */
+function renderRhythm(){
+  const box=document.getElementById("rhythm");
+  box.innerHTML=RHYTHM.map(g=>`<div class="rgroup"><h3><i style="background:${col(g.ch)}"></i>${g.title}</h3><p>${esc(g.desc)}</p>
+    ${g.rows.map(r=>`<div class="rrow"><span class="when">${esc(r[0])}</span><div><b>${esc(r[1])}</b><br>${esc(r[2])}${r[3]?`<br><button class="open" data-open="${r[3]}">Открыть пример →</button>`:""}</div></div>`).join("")}</div>`).join("");
+}
+function renderVis(){
+  const box=document.getElementById("vis");
+  box.innerHTML=VISUALS.map(v=>`<div class="vis"><div class="mockholder">${MOCK[v.mock]()}</div>
+    <div><h3>${esc(v.name)}</h3><div class="use">${esc(v.use)}</div></div>
+    <ul>${v.items.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>
+    <button class="open" style="font:inherit;font-size:13px;color:var(--accent);background:none;border:0;padding:0;cursor:pointer;align-self:flex-start" data-open="${v.open}">Текст и ТЗ →</button></div>`).join("");
+}
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-open]");if(!t)return;
+  const id=t.dataset.open;
+  const p=id==="review"?POSTS.find(x=>x.id==="p19"):(SAMPLES[id]||POSTS.find(x=>x.id===id));
+  if(p) openModal(p,t);
+});
+
+/* ---------- tabs ---------- */
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
+  document.querySelectorAll(".tab").forEach(x=>x.setAttribute("aria-selected",x===t));
+  document.querySelectorAll(".view").forEach(v=>v.hidden=v.id!=="view-"+t.dataset.view);
+});
+document.getElementById("owner").onchange=e=>{state.owner=e.target.value;save();renderBoard();};
+document.getElementById("reset").onclick=()=>{state.ch=new Set(Object.keys(CH));state.owner="";save();renderChips();renderBoard();};
+
+const HIST=[
+ ["Почему выбирают нас","01.10 · Отл. спрос без срока",41,12,0],
+ ["Ошибка №1: «Сначала взыщем через суд…»","30.09 · Вебинар 25.09",42,25,0],
+ ["Чек-лист: 5 действий подрядчику","28.09 · Вебинар 25.09",43,26,2],
+ ["Ошибка №1: «Заказчик расторг договор…»","23.09 · Вебинар 17.09",68,35,0],
+ ["Чек-лист: 5 действий после расторжения","21.09 · Вебинар 17.09",68,39,1]];
+function renderMetrics(){
+  const del=HIST.reduce((a,r)=>a+r[2],0), op=HIST.reduce((a,r)=>a+r[3],0), cl=HIST.reduce((a,r)=>a+r[4],0);
+  const pct=(a,b)=>(b?a/b*100:0).toFixed(1).replace(".",",")+"%";
+  const hist=HIST.map(r=>`<div class="hrow"><div class="nm">${esc(r[0])}<small>${esc(r[1])} · ${r[2]} дост.</small></div><div class="bars">
+    <div class="bar"><div><i style="width:${r[3]/r[2]*100}%;background:var(--c-email)"></i></div><span>${pct(r[3],r[2])} откр.</span></div>
+    <div class="bar"><div><i style="width:${Math.max(r[4]/r[2]*100,0)}%;background:var(--accent)"></i></div><span>${pct(r[4],r[2])} клик</span></div></div></div>`).join("");
+  const FUN=[["Охват","Просмотры поста, доставленные письма","пост ≥150, доставка ≥95%"],["Переходы","Клики по UTM на /lawyer-community","письмо ≥2%, пост ≥2%"],["Заявки","Анкеты на почте Эдуарда","визит → заявка ≥10%"],["Вступили","Заявка → участник группы","≥60% за 3 дня"],["Активные","Написали хотя бы раз за 2 недели","≥10% участников"],["Передали дело","«Партнёрская передача» в Б24","первая — за 3 месяца"]];
+  const ROWS=[["Письмо-запуск","Заявки / доставленные","Открытия ≥40%, клики ≥2%","Unisender + Б24"],["Личные письма","Вступили / отправлено","≥30%","Б24, вручную"],["Пост-запуск","Переходы / просмотры","≥150 просмотров, переходы ≥2%","TG + Метрика"],["Опрос","Голоса / просмотры + доля «Я не юрист»","≥8 голосов","TG"],["Обзор практики","Разных авторов ответов за 48 ч","≥2","TG"],["Кейс недели","Разных участников с вариантом","≥3 за месяц","TG"],["Пятничный тред","Вопросы участников","≥1, каждый запрос экспертизы — лид","TG + Б24"],["Тизер в ИЮР","Заявки с utm_content=teaser","переходы ≥2%","Метрика"],["Юрзавтрак","Пришли / записались","≥50%","Б24"]];
+  document.getElementById("metrics").innerHTML=`
+  <div class="mx-block"><div class="eyebrow">Отправная точка · 5 последних рассылок ИЮР в Unisender</div>
+    <h2>Письма открывают, но почти не кликают</h2>
+    <div class="stats"><div class="stat"><b>${del}</b><span>доставлено за 5 писем, 41–68 на письмо</span></div>
+      <div class="stat"><b>${pct(op,del)}</b><span>открыли — для B2B это хороший уровень</span></div>
+      <div class="stat bad"><b>${pct(cl,del)}</b><span>кликнули — ${cl} перехода на ${del} писем</span></div>
+      <div class="stat"><b>150</b><span>средний охват поста в канале ИЮР</span></div></div>
+    <div class="hist">${hist}</div>
+    <p>Что это значит для запуска. Тема и отправитель работают: люди открывают. Проблема — в теле письма: CTA не видно или он не убеждает. Поэтому в письме-запуске кнопка стоит сразу после первого абзаца, и главная метрика письма — клики и заявки, а не открытия. Базы маленькие, поэтому один-два клика заметно двигают процент: смотрим и на абсолютные числа.</p></div>
+
+  <div class="mx-block"><div class="eyebrow">Воронка сообщества</div><h2>От охвата до переданного дела</h2>
+    <div class="funnel">${FUN.map((f,i)=>`<div class="fstep ${i===5?"biz":""}"><b>${f[0]}</b><span>${f[1]}</span><span class="tgt">${f[2]}</span></div>`).join("")}</div>
+    <p>Все метрики до последнего шага промежуточные. Бизнес-результат — дела, которые участники передали в ИЮР. Если через 3 месяца передач нет, сообщество живёт как клуб, но на ИЮР не работает.</p></div>
+
+  <div class="mx-two">
+    <div class="mx-block"><div class="eyebrow">Здоровье группы · раз в 2 недели</div><h2>Читают или говорят</h2>
+      <ul class="checklist" style="list-style:none">
+        <li><span><b>Активация.</b> Доля участников, написавших хотя бы раз. Меньше 10% — читают, но молчат: меняем форматы.</span></li>
+        <li><span><b>Разные авторы.</b> Сколько разных людей пишет. Десять сообщений одного человека — не активность.</span></li>
+        <li><span><b>Отток.</b> Сколько вышло за период и после какого поста.</span></li>
+        <li><span><b>Запросы экспертизы.</b> Сколько вопросов в пятничном треде ушло лидом в Б24.</span></li></ul></div></div>
+
+  <div class="mx-block"><div class="eyebrow">Цели по активностям · для понедельничного отчёта в 10:00</div><h2>Что проверяем каждую неделю</h2>
+    <div style="overflow-x:auto"><table class="mtable"><thead><tr><th>Активность</th><th>Главная метрика</th><th>Цель</th><th>Где смотрим</th></tr></thead>
+    <tbody>${ROWS.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td class="t">${r[2]}</td><td>${r[3]}</td></tr>`).join("")}</tbody></table></div>
+    <p class="note">Цели по постам считаются от охвата 150. Цели по письмам — от прошлых рассылок ИЮР. Цели по группе и воронке — стартовые: через 2 недели заменим их фактом.</p></div>`;
+}
+load();renderMetrics();renderChips();renderBoard();renderRhythm();renderVis();
+</script>
+</body>
+</html>
